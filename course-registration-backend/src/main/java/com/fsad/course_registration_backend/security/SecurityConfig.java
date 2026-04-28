@@ -6,8 +6,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -29,8 +32,13 @@ public class SecurityConfig {
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
 
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
+                    "/",
                     "/api/auth/**",
                     "/swagger-ui/**",
                     "/v3/api-docs/**"
@@ -58,7 +66,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow both local frontend and deployed Vercel frontend
         config.setAllowedOrigins(
             List.of(
                 "http://localhost:5173",
@@ -66,7 +73,6 @@ public class SecurityConfig {
             )
         );
 
-        // Allowed HTTP methods
         config.setAllowedMethods(
             List.of(
                 "GET",
@@ -77,12 +83,10 @@ public class SecurityConfig {
             )
         );
 
-        // Allow all headers
         config.setAllowedHeaders(
             List.of("*")
         );
 
-        // Allow credentials (cookies/auth headers)
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
