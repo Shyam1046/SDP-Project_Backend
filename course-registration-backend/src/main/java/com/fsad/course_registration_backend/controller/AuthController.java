@@ -19,33 +19,29 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
-public class AuthController 
-{
+public class AuthController {
+
     private final UserRepository repo;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest req) 
-    {
-        if (req.getUsername() == null || req.getPassword() == null) 
-        {
+    public ResponseEntity<?> login(@RequestBody AuthRequest req) {
+        if (req.getUsername() == null || req.getPassword() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Username and password are required");
         }
 
         Optional<User> optUser = repo.findByUsername(req.getUsername());
 
-        if (optUser.isEmpty()) 
-        {
+        if (optUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("User not found");
         }
 
         User user = optUser.get();
 
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) 
-        {
+        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid password");
         }
@@ -62,28 +58,25 @@ public class AuthController
         );
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthRequest req) 
-    {
-        if (req.getUsername() == null || req.getPassword() == null) 
-        {
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody AuthRequest req) {
+        if (req.getUsername() == null || req.getPassword() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Username and password are required");
         }
 
-        if (repo.findByUsername(req.getUsername()).isPresent()) 
-        {
+        if (repo.findByUsername(req.getUsername()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Username already exists");
         }
 
         User user = new User();
         user.setUsername(req.getUsername());
-        user.setPassword(
-                passwordEncoder.encode(req.getPassword())
-        );
+        user.setPassword(passwordEncoder.encode(req.getPassword()));
         user.setRole(
-                req.getRole() != null ? req.getRole() : "student"
+                req.getRole() != null && !req.getRole().isBlank()
+                        ? req.getRole()
+                        : "student"
         );
 
         repo.save(user);
